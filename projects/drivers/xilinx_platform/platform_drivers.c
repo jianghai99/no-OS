@@ -57,15 +57,46 @@
 int32_t i2c_init(struct i2c_desc **desc,
 		 const struct i2c_init_param *param)
 {
-	if (desc) {
-		// Unused variable - fix compiler warning
-	}
+	i2c_desc *dev;
+	int32_t ret;
 
-	if (param->type) {
-		// Unused variable - fix compiler warning
-	}
+	dev = calloc(1, sizeof *dev);
+	if(!dev)
+		return FAILURE;
+
+	dev->type = param->type;
+	dev->id = XPAR_AXI_IIC_MAIN_DEVICE_ID;
+	dev->max_speed_hz = param->max_speed_hz;
+	dev->slave_address = param->slave_address;
+
+	dev->config = XIic_LookupConfig(dev->id);
+	if (dev->config == NULL)
+		goto error;
+
+	ret = XIic_CfgInitialize(&dev->instance, dev->config,
+				 dev->config->BaseAddress);
+	if(ret != XST_SUCCESS)
+		goto error;
+
+	Xil_ExceptionRegisterHandler(XIL_EXCEPTION_ID_IRQ_INT,
+				     XIic_InterruptHandler, &dev->instance);
+
+	ret = XIic_Start(&dev->instance);
+	if(ret != XST_SUCCESS)
+		goto error;
+
+	ret = XIic_SetAddress(&dev->instance, XII_ADDR_TO_SEND_TYPE,
+			      dev->slave_address);
+	if(ret != XST_SUCCESS)
+		goto error;
+
+	*desc = dev;
 
 	return SUCCESS;
+error:
+	free(dev);
+
+	return FAILURE;
 }
 
 /**
@@ -75,9 +106,13 @@ int32_t i2c_init(struct i2c_desc **desc,
  */
 int32_t i2c_remove(struct i2c_desc *desc)
 {
-	if (desc) {
-		// Unused variable - fix compiler warning
-	}
+	int32_t ret;
+
+	ret = XIic_Stop(&desc->instance);
+	if(ret != XST_SUCCESS)
+		return FAILURE;
+
+	free(desc);
 
 	return SUCCESS;
 }
@@ -97,21 +132,18 @@ int32_t i2c_write(struct i2c_desc *desc,
 		  uint8_t bytes_number,
 		  uint8_t stop_bit)
 {
-	if (desc) {
-		// Unused variable - fix compiler warning
-	}
+	u8 teminate_option;
+	int32_t ret;
 
-	if (data) {
-		// Unused variable - fix compiler warning
-	}
+	if(stop_bit == 1)
+		teminate_option = XIIC_STOP;
+	else
+		teminate_option = XIIC_REPEATED_START;
 
-	if (bytes_number) {
-		// Unused variable - fix compiler warning
-	}
-
-	if (stop_bit) {
-		// Unused variable - fix compiler warning
-	}
+	ret = XIic_Send(desc->instance.BaseAddress, desc->slave_address, data,
+			bytes_number, teminate_option);
+	if(ret == 0)
+		return FAILURE;
 
 	return SUCCESS;
 }
@@ -131,21 +163,18 @@ int32_t i2c_read(struct i2c_desc *desc,
 		 uint8_t bytes_number,
 		 uint8_t stop_bit)
 {
-	if (desc) {
-		// Unused variable - fix compiler warning
-	}
+	uint8_t teminate_option;
+	int32_t ret;
 
-	if (data) {
-		// Unused variable - fix compiler warning
-	}
+	if(stop_bit == 1)
+		teminate_option = XIIC_STOP;
+	else
+		teminate_option = XIIC_REPEATED_START;
 
-	if (bytes_number) {
-		// Unused variable - fix compiler warning
-	}
-
-	if (stop_bit) {
-		// Unused variable - fix compiler warning
-	}
+	ret = XIic_Recv(desc->instance.BaseAddress, desc->slave_address, data,
+			bytes_number, teminate_option);
+	if(ret == 0)
+		return FAILURE;
 
 	return SUCCESS;
 }

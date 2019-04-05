@@ -48,6 +48,8 @@
 #ifdef _XPARAMETERS_PS_H_
 #include <xspips.h>
 #include <xgpiops.h>
+#include <xiic.h>
+#include <xil_exception.h>
 #else
 #include <xspi.h>
 #include <xgpio.h>
@@ -81,7 +83,6 @@ typedef enum i2c_type {
 
 typedef struct i2c_init_param {
 	enum i2c_type	type;
-	uint32_t	id;
 	uint32_t	max_speed_hz;
 	uint8_t		slave_address;
 } i2c_init_param;
@@ -91,6 +92,11 @@ typedef struct i2c_desc {
 	uint32_t	id;
 	uint32_t	max_speed_hz;
 	uint8_t		slave_address;
+#ifdef _XPARAMETERS_PS_H_
+	XIic_Config *config;
+	XIic instance;
+#else
+#endif
 } i2c_desc;
 
 typedef enum spi_type {
