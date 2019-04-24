@@ -632,12 +632,12 @@ int main(void)
 	/*****                Mykonos Initialize attenuations                *****/
 	/*************************************************************************/
 
-	if ((mykError = MYKONOS_setTx1Attenuation(&mykDevice, 0)) != MYKONOS_ERR_OK) {
+	if ((mykError = MYKONOS_setTx1Attenuation(&mykDevice, 10000)) != MYKONOS_ERR_OK) {
 		errorString = getMykonosErrorMessage(mykError);
 		goto error_11;
 	}
 
-	if ((mykError = MYKONOS_setTx2Attenuation(&mykDevice, 0)) != MYKONOS_ERR_OK) {
+	if ((mykError = MYKONOS_setTx2Attenuation(&mykDevice, 10000)) != MYKONOS_ERR_OK) {
 		errorString = getMykonosErrorMessage(mykError);
 		goto error_11;
 	}
